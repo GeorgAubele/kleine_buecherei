@@ -1,0 +1,18 @@
+.my_searchfield {
+  width: 300px;
+}
+.my_searchlabel {
+  width: 130px;
+}
+
+.my_searchlabel2 {
+  width: 80px;
+}
+
+.flashes {
+}
+
+.success {
+  text-align: center;
+  color: greenyellow;
+}

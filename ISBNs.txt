@@ -1,0 +1,47 @@
+9783453171862
+9783257200553
+9783423330527
+9783442098248
+9783404134120
+9783442066780
+9783940919120
+9783785526255
+9783440163443
+9783426278765
+9783747800201
+9789056912765
+9789056914035
+9783865399267
+9783528031688
+9783897211551
+9783540412830
+9783423330718
+9783806809107
+3811221124
+
+
+5051890305220
+
+
+
+
+9789056912765
+Silmans Endspielkurs: Vom Anfänger zum Meister
+Jeremy Silman
+New in Chess
+2008
+
+9789056914035
+Schach mit neuem Schwung: Besser spielen durch das Verstehen von Ungleichgewichten
+Jeremy Silman
+New in Chess
+2012
+
+
+Besser:
+SELECT buecher.Titel, benutzer.Vorname
+from buecher INNER JOIN ausleihen
+ON buecher.BuchID = ausleihen.BuchID
+INNER JOIN benutzer
+ON ausleihen.BenutzerID = benutzer.BenutzerID
+WHERE ausleihen.Rueckgabedatum IS NULL AND benutzer.Nachname = "Aubele"

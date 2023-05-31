@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="/static/book.png" type="image/x-icon">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+      crossorigin="anonymous"
+    ></script>
+    <link
+    rel="stylesheet"
+    type="text/css"
+    href="{{ url_for('static',filename='styles/styles.css') }}"
+  />
+    <title>Unsere Bibliothek</title>
+  </head>
+
+  <body>
+
+    <!-- Tab Navigation -->
+
+    <ul class="nav nav-pills nav-pills nav-justified">
+      <li class="nav-item">
+        <a class="nav-link" aria-current="page" href="./">Rückgabe</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="lending.html">Ausleihe</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="book_search.html">Büchersuche</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="user_management.html">Benutzerverwaltung</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="book_management.html">Bücherverwaltung</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link active" href="#">Bücherimport </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="report.html">Statistik</a>
+      </li>
+    </ul>
+
+<!-- Buchimport -->
+
+    <h1 class="mt-3 ms-5">Bücher Import</h1>
+    {% with messages = get_flashed_messages() %} {% if messages %}
+    {% for message in messages %}
+    <div class="container">  
+    <h2 class="flashes mt-3 success">{{message}}</h2>
+    </div>
+    {% endfor %}
+    {% endif %} {% endwith %}
+    <div class="justify-start mt-3 ms-5 me-5 row">
+      <div class="col">
+
+<!-- Nummern eingeben -->
+
+        <h2>ISBN-Nummern eingeben</h2>
+        Pro Zeile eine Nummer
+        <form action="" method="POST">
+          <div class="input-group my-3">
+            <span class="input-group-text">ISBN-Nummern:</span>
+            <textarea class="form-control" style="height: 400px" name="ISBNs">{{ISBNs}}</textarea>
+          </div>
+          <button type="submit" class="btn btn-primary mt-3" name="btn_search_goob">Suchen bei Google</button> <br>
+          <button type="submit" class="btn btn-primary mt-3" name="btn_search_wiki">Suchen bei Wikipedia</button> <br>
+          <button type="submit" class="btn btn-primary mt-3" name="btn_search_openl">Suchen bei OpenLibrary</button>
+        </form>
+      </div>
+
+<!-- Ergebnisse -->
+
+      <div class="col-7">
+        <h2>Suchergebnisse</h2>
+        Gefundene Bücher
+        <form action="" method="POST">
+          <div class="input-group my-3">
+            <span class="input-group-text">Bücher:</span>
+            <textarea class="form-control" style="height: 400px" readonly>{{result_txt}}</textarea>
+          </div>
+          <p> Sollte etwas nicht passen, bitte links die entsprechende ISBN herauslöschen und erneut versuchen. <br> 
+          Wenn man zufrieden mit der Liste ist, auf "Importieren" klicken. </p>
+          <button type="submit" class="btn btn-primary" name="btn_import_books">Importieren</button>
+        </form>
+      </div>
+
+      </div>
+    </div>
+<hr>
+    <!-- footer -->
+
+    <div class="d-flex justify-content-end">
+      <div class="card">
+        <div class="card-body">Georg Aubele, 2023</div>
+      </div>
+    </div>
+  </body>
+</html>

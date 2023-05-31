@@ -1,0 +1,21 @@
+.my_searchfield {
+  width: 300px;
+}
+.my_searchlabel {
+  width: 130px;
+}
+
+.my_searchlabel2 {
+  width: 80px;
+}
+
+.flashes {
+}
+
+.success {
+  color: greenyellow;
+}
+
+.tdicon{ 
+  width: 32px !important; 
+}
