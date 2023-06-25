@@ -1,6 +1,8 @@
 from flask import Flask, flash, render_template, request, session
 from flask_sqlalchemy import SQLAlchemy
 from enum import Enum
+from datetime import timedelta, datetime
+
 
 # from sqlalchemy.sql import func
 from sqlalchemy import text, or_
@@ -19,6 +21,7 @@ from my_tools import (
     check_ISBN,
     liststring_to_list,
     list_to_liststring,
+    format_date,
 )
 
 
@@ -33,6 +36,7 @@ db = SQLAlchemy(app)
 
 # global variables
 my_book_list = []
+imported_book_list = []
 heute = date_to_str(date.today())
 
 
@@ -74,6 +78,8 @@ class Buecher(db.Model):
     Verlag = db.Column(db.String(100), nullable=True)
     Jahr = db.Column(db.Integer, nullable=True)
     Schlagworte = db.Column(db.String(300), nullable=True, default="Keine")
+    Kommentar = db.Column(db.String(500), nullable=True, default=" ")
+    Standort = db.Column(db.String(300), nullable=True, default="Keiner")
     Medium = db.Column(db.Enum(Medien), default="Roman_Jugendbuch")
     Anzahl = db.Column(db.Integer, default=1)
     Momentan_vorhanden = db.Column(db.Integer, default=1)
@@ -94,6 +100,11 @@ with app.app_context():
 
 
 # window = webview.create_window("Unsere Bibliothek", app, width=1100, height=950)
+
+
+# =============================================================================
+# INDEX - RETURN BOOKS
+# =============================================================================
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -127,14 +138,23 @@ def start_page():
             date_today = date.today()
             date_next_day = date_today + timedelta(days=1)
 
-            sql_query = """SELECT buecher.Titel, buecher.BuchID from buecher 
+            sql_query = """SELECT buecher.Titel, buecher.BuchID, buecher.ISBN, buecher.Kommentar, ausleihen.Ausleihdatum from buecher 
                     INNER JOIN ausleihen ON buecher.BuchID = ausleihen.BuchID 
                     INNER JOIN benutzer ON ausleihen.BenutzerID = benutzer.BenutzerID 
                     WHERE ausleihen.Rueckgabedatum IS NULL AND benutzer.BenutzerID = :ID"""
             result = db.session.execute(text(sql_query), {"ID": user_id})
             rows = []
             if result:
-                rows = [dict(Titel=r[0], BuchID=r[1]) for r in result]
+                rows = [
+                    dict(
+                        Titel=r[0],
+                        BuchID=r[1],
+                        ISBN=r[2],
+                        Kommentar=r[3],
+                        Ausleihdatum=format_date(r[4]),
+                    )
+                    for r in result
+                ]
             sql_query2 = """SELECT buecher.Titel from buecher 
                     INNER JOIN ausleihen ON buecher.BuchID = ausleihen.BuchID 
                     INNER JOIN benutzer ON ausleihen.BenutzerID = benutzer.BenutzerID 
@@ -149,6 +169,7 @@ def start_page():
                 backs = [dict(Titel=r[0]) for r in result2]
             return render_template(
                 "index.html",
+                a_ID=ausleiher.BenutzerID,
                 a_v=ausleiher.Vorname,
                 a_n=ausleiher.Nachname,
                 rows=rows,
@@ -179,14 +200,23 @@ def start_page():
             lend_book.Momentan_vorhanden += 1
             db.session.commit()
 
-            sql_query = """SELECT buecher.Titel, buecher.BuchID from buecher 
+            sql_query = """SELECT buecher.Titel, buecher.BuchID, buecher.ISBN, buecher.Kommentar, ausleihen.Ausleihdatum from buecher 
                     INNER JOIN ausleihen ON buecher.BuchID = ausleihen.BuchID 
                     INNER JOIN benutzer ON ausleihen.BenutzerID = benutzer.BenutzerID 
                     WHERE ausleihen.Rueckgabedatum IS NULL AND benutzer.BenutzerID = :ID"""
             result = db.session.execute(text(sql_query), {"ID": a_ID})
             rows = []
             if result:
-                rows = [dict(Titel=r[0], BuchID=r[1]) for r in result]
+                rows = [
+                    dict(
+                        Titel=r[0],
+                        BuchID=r[1],
+                        ISBN=r[2],
+                        Kommentar=r[3],
+                        Ausleihdatum=format_date(r[4]),
+                    )
+                    for r in result
+                ]
             sql_query2 = """SELECT buecher.Titel from buecher 
                     INNER JOIN ausleihen ON buecher.BuchID = ausleihen.BuchID 
                     INNER JOIN benutzer ON ausleihen.BenutzerID = benutzer.BenutzerID 
@@ -211,14 +241,108 @@ def start_page():
     return render_template("index.html")
 
 
+# =============================================================================
+# BOOK SEARCH
+# =============================================================================
+
+
 @app.route("/book_search.html", methods=["GET", "POST"])
 def book_search():
     """Funktion der Seite"""
     if request.method == "POST":
-        if "btn_book_search" in request.form:
+        # if "btn_book_search" in request.form:
+        #     search_title = request.form["search_title"]
+        #     search_result = Buecher.query.filter(
+        #         Buecher.Titel.ilike(f"%{search_title}%")
+        #     ).all()
+
+        #     if not search_result:
+        #         flash("Keine Bücher gefunden.")
+        #         return render_template("book_search.html")
+
+        #     flash("Bücher erfolgreich gesucht.")
+        #     return render_template("book_search.html", books=search_result)
+
+        if "btn_book_away_search" in request.form:
             search_title = request.form["search_title"]
+            sql_query = """
+                SELECT buecher.Autor,buecher.Titel, buecher.Schlagworte, buecher.Kommentar, 
+                buecher.Standort, buecher.Medium, buecher.ISBN, buecher.Momentan_vorhanden, 
+                ausleihen.Ausleihdatum, benutzer.Vorname, Benutzer.Nachname
+                FROM buecher
+                LEFT JOIN ausleihen ON buecher.BuchID = ausleihen.BuchID
+                LEFT JOIN benutzer ON ausleihen.BenutzerID = benutzer.BenutzerID
+                WHERE buecher.Titel LIKE :search_title
+                AND  ausleihen.Rueckgabedatum IS NULL
+                """
+            result = db.session.execute(
+                text(sql_query), {"search_title": f"%{search_title}%"}
+            )
+            rows = []
+            if result:
+                rows = [
+                    dict(
+                        Autor=r[0],
+                        Titel=r[1],
+                        Schlagworte=r[2],
+                        Kommentar=r[3],
+                        Standort=r[4],
+                        Medium=r[5],
+                        ISBN=r[6],
+                        vorhanden=r[7],
+                        Ausleihdatum=format_date(r[8]) if r[8] else "",
+                        Vorname=r[9] if r[9] else "",
+                        Nachname=r[10] if r[10] else "",
+                    )
+                    for r in result
+                ]
+            if not rows:
+                flash("Keine Bücher gefunden.")
+                return render_template("book_search.html")
+
+            flash("Bücher erfolgreich gesucht.")
+            return render_template("book_search.html", books=rows)
+
+        if "btn_book_here_search" in request.form:
+            search_title = request.form["search_title"]
+            sql_query = """
+                SELECT buecher.Autor,buecher.Titel, buecher.Schlagworte, buecher.Kommentar, 
+                buecher.Standort, buecher.Medium, buecher.ISBN, buecher.Momentan_vorhanden
+                FROM buecher
+                WHERE buecher.Titel LIKE :search_title
+                """
+            result = db.session.execute(
+                text(sql_query), {"search_title": f"%{search_title}%"}
+            )
+            rows = []
+            if result:
+                rows = [
+                    dict(
+                        Autor=r[0],
+                        Titel=r[1],
+                        Schlagworte=r[2],
+                        Kommentar=r[3],
+                        Standort=r[4],
+                        Medium=r[5],
+                        ISBN=r[6],
+                        vorhanden=r[7],
+                        Ausleihdatum="",
+                        Vorname="",
+                        Nachname="",
+                    )
+                    for r in result
+                ]
+            if not rows:
+                flash("Keine Bücher gefunden.")
+                return render_template("book_search.html")
+
+            flash("Bücher erfolgreich gesucht.")
+            return render_template("book_search.html", books=rows)
+
+        if "btn_author_search" in request.form:
+            search_author = request.form["search_author"]
             search_result = Buecher.query.filter(
-                Buecher.Titel.ilike(f"%{search_title}%")
+                Buecher.Autor.ilike(f"%{search_author}%")
             ).all()
 
             if not search_result:
@@ -241,7 +365,144 @@ def book_search():
             flash("Bücher erfolgreich gesucht.")
             return render_template("book_search.html", books=search_result)
 
+        if "btn_4W_search" in request.form:
+            four_weeks_ago = (datetime.now() - timedelta(weeks=4)).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+            sql_query = """
+            SELECT buecher.Autor,buecher.Titel, buecher.Schlagworte, buecher.Kommentar, 
+            buecher.Standort, buecher.Medium, buecher.ISBN, buecher.Momentan_vorhanden, 
+            ausleihen.Ausleihdatum, benutzer.Vorname, Benutzer.Nachname
+            FROM buecher  
+            INNER JOIN ausleihen ON buecher.BuchID = ausleihen.BuchID 
+            INNER JOIN benutzer ON ausleihen.BenutzerID = benutzer.BenutzerID 
+            WHERE ausleihen.Rueckgabedatum IS NULL 
+            AND ausleihen.Ausleihdatum <= :four_weeks_ago
+            """
+            result = db.session.execute(
+                text(sql_query), {"four_weeks_ago": four_weeks_ago}
+            )
+            rows = []
+            if result:
+                rows = [
+                    dict(
+                        Autor=r[0],
+                        Titel=r[1],
+                        Schlagworte=r[2],
+                        Kommentar=r[3],
+                        Standort=r[4],
+                        Medium=r[5],
+                        ISBN=r[6],
+                        vorhanden=r[7],
+                        Ausleihdatum=format_date(r[8]),
+                        Vorname=r[9],
+                        Nachname=r[10],
+                    )
+                    for r in result
+                ]
+                flash("Bücher erfolgreich gesucht.")
+            return render_template("book_search.html", books=rows)
+
+            if not result:
+                flash("Keine Bücher gefunden.")
+                return render_template("book_search.html")
+
+            return render_template("book_search.html", books=search_result)
+
+        if "btn_8W_search" in request.form:
+            four_weeks_ago = (datetime.now() - timedelta(weeks=8)).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+            sql_query = """
+            SELECT buecher.Autor,buecher.Titel, buecher.Schlagworte, buecher.Kommentar, 
+            buecher.Standort, buecher.Medium, buecher.ISBN, buecher.Momentan_vorhanden, 
+            ausleihen.Ausleihdatum, benutzer.Vorname, Benutzer.Nachname
+            FROM buecher  
+            INNER JOIN ausleihen ON buecher.BuchID = ausleihen.BuchID 
+            INNER JOIN benutzer ON ausleihen.BenutzerID = benutzer.BenutzerID 
+            WHERE ausleihen.Rueckgabedatum IS NULL 
+            AND ausleihen.Ausleihdatum <= :four_weeks_ago
+            """
+            result = db.session.execute(
+                text(sql_query), {"four_weeks_ago": four_weeks_ago}
+            )
+            rows = []
+            if result:
+                rows = [
+                    dict(
+                        Autor=r[0],
+                        Titel=r[1],
+                        Schlagworte=r[2],
+                        Kommentar=r[3],
+                        Standort=r[4],
+                        Medium=r[5],
+                        ISBN=r[6],
+                        vorhanden=r[7],
+                        Ausleihdatum=format_date(r[8]),
+                        Vorname=r[9],
+                        Nachname=r[10],
+                    )
+                    for r in result
+                ]
+                flash("Bücher erfolgreich gesucht.")
+            return render_template("book_search.html", books=rows)
+
+            if not result:
+                flash("Keine Bücher gefunden.")
+                return render_template("book_search.html")
+
+            return render_template("book_search.html", books=search_result)
+
+        if "btn_12W_search" in request.form:
+            four_weeks_ago = (datetime.now() - timedelta(weeks=12)).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+            sql_query = """
+            SELECT buecher.Autor,buecher.Titel, buecher.Schlagworte, buecher.Kommentar, 
+            buecher.Standort, buecher.Medium, buecher.ISBN, buecher.Momentan_vorhanden, 
+            ausleihen.Ausleihdatum, benutzer.Vorname, Benutzer.Nachname
+            FROM buecher  
+            INNER JOIN ausleihen ON buecher.BuchID = ausleihen.BuchID 
+            INNER JOIN benutzer ON ausleihen.BenutzerID = benutzer.BenutzerID 
+            WHERE ausleihen.Rueckgabedatum IS NULL 
+            AND ausleihen.Ausleihdatum <= :four_weeks_ago
+            """
+            result = db.session.execute(
+                text(sql_query), {"four_weeks_ago": four_weeks_ago}
+            )
+            rows = []
+            if result:
+                rows = [
+                    dict(
+                        Autor=r[0],
+                        Titel=r[1],
+                        Schlagworte=r[2],
+                        Kommentar=r[3],
+                        Standort=r[4],
+                        Medium=r[5],
+                        ISBN=r[6],
+                        vorhanden=r[7],
+                        Ausleihdatum=format_date(r[8]),
+                        Vorname=r[9],
+                        Nachname=r[10],
+                    )
+                    for r in result
+                ]
+                flash("Bücher erfolgreich gesucht.")
+            return render_template("book_search.html", books=rows)
+
+            if not result:
+                flash("Keine Bücher gefunden.")
+                return render_template("book_search.html")
+
+            return render_template("book_search.html", books=search_result)
+
     return render_template("book_search.html")
+
+
+# =============================================================================
+# BOOK IMPORT
+# =============================================================================
 
 
 @app.route("/book_import.html", methods=["GET", "POST"])
@@ -268,7 +529,7 @@ def book_import():
                     + "\n \n"
                 )
                 my_book_list.append(book)
-            # print(my_book_list)
+
             return render_template(
                 "book_import.html", result_txt=result_txt, ISBNs=tmp_txt
             )
@@ -292,7 +553,7 @@ def book_import():
                     + "\n \n"
                 )
                 my_book_list.append(book)
-            # print(my_book_list)
+
             return render_template(
                 "book_import.html", result_txt=result_txt, ISBNs=tmp_txt
             )
@@ -316,7 +577,7 @@ def book_import():
                     + "\n \n"
                 )
                 my_book_list.append(book)
-            # print(my_book_list)
+
             return render_template(
                 "book_import.html", result_txt=result_txt, ISBNs=tmp_txt
             )
@@ -326,6 +587,7 @@ def book_import():
             return render_template("book_import.html")
 
         if "btn_import_books" in request.form:
+            # Liste aller vorhandenen ISBNs in der Datenbank zum Vergleich
             list_of_ISBNs = [
                 num[0]
                 for num in db.session.execute(
@@ -345,6 +607,7 @@ def book_import():
                     exist_book.Momentan_vorhanden += 1
                     db.session.commit()
                 else:
+                    imported_book_list.append(book["ISBN-13"])
                     new_book = Buecher(
                         ISBN=book["ISBN-13"],
                         Titel=book["Title"],
@@ -356,9 +619,40 @@ def book_import():
                         db.session.add(new_book)
                         db.session.commit()
             flash("Bücher erfolgreich importiert.")
-            return render_template("book_import.html")
+
+            # SQL-Abfrage mit SQLAlchemy
+            books = Buecher.query.filter(Buecher.ISBN.in_(imported_book_list)).all()
+
+            return render_template("book_import.html", books=books)
+
+        if "btn_book_change" in request.form:
+            # books = session.get("books")
+            search_ID = request.form["btn_book_change"]
+            chg_book = db.session.get(Buecher, search_ID)
+            chg_book.ISBN = request.form["ISBN"]
+            chg_book.Titel = request.form["title"]
+            chg_book.Autor = request.form["author"]
+            chg_book.Schlagworte = request.form["tags"]
+            chg_book.Medium = request.form["medium"]
+            chg_book.Kommentar = request.form["comment"]
+            chg_book.Standort = request.form["location"]
+            chg_book.Verlag = request.form["publisher"]
+            chg_book.Jahr = request.form["year"]
+            chg_book.Anzahl = request.form["number"]
+            chg_book.Momentan_vorhanden = request.form["available"]
+            db.session.add(chg_book)
+            db.session.commit()
+
+            imported_book_list.remove(request.form["ISBN"])
+            books = Buecher.query.filter(Buecher.ISBN.in_(imported_book_list)).all()
+            return render_template("book_import.html", books=books)
 
     return render_template("book_import.html")
+
+
+# =============================================================================
+# BOOK MANAGEMENT
+# =============================================================================
 
 
 @app.route("/book_management.html", methods=["GET", "POST"])
@@ -405,6 +699,8 @@ def book_management():
             chg_book.Autor = request.form["author"]
             chg_book.Schlagworte = request.form["tags"]
             chg_book.Medium = request.form["medium"]
+            chg_book.Kommentar = request.form["comment"]
+            chg_book.Standort = request.form["location"]
             chg_book.Verlag = request.form["publisher"]
             chg_book.Jahr = request.form["year"]
             chg_book.Anzahl = request.form["number"]
@@ -450,6 +746,8 @@ def book_management():
                     Autor=request.form["author"],
                     Schlagworte=request.form["tags"],
                     Medium=request.form["medium"],
+                    Kommentar=request.form["comment"],
+                    Standort=request.form["location"],
                     Verlag=request.form["publisher"],
                     Jahr=request.form["year"],
                     Anzahl=number,
@@ -471,6 +769,11 @@ def book_management():
         #     return render_template("book_management.html")
 
     return render_template("book_management.html")
+
+
+# =============================================================================
+# BOOK LENDING
+# =============================================================================
 
 
 @app.route("/lending.html", methods=["GET", "POST"])
@@ -501,11 +804,13 @@ def lending():
             session["a_ID"] = user_id
             session["a_v"] = ausleiher.Vorname
             session["a_n"] = ausleiher.Nachname
-            sql_query = "SELECT buecher.Titel from buecher INNER JOIN ausleihen ON buecher.BuchID = ausleihen.BuchID INNER JOIN benutzer ON ausleihen.BenutzerID = benutzer.BenutzerID WHERE ausleihen.Rueckgabedatum IS NULL AND benutzer.BenutzerID = :ID"
-            result = db.session.execute(text(sql_query), {"ID": user_id})
+            sql_query = "SELECT buecher.Titel, ausleihen.Ausleihdatum from buecher INNER JOIN ausleihen ON buecher.BuchID = ausleihen.BuchID INNER JOIN benutzer ON ausleihen.BenutzerID = benutzer.BenutzerID WHERE ausleihen.Rueckgabedatum IS NULL AND benutzer.BenutzerID = :ID"
+            result = db.session.execute(text(sql_query), {"ID": session["a_ID"]})
             rows = []
             if result:
-                rows = [dict(Titel=r[0]) for r in result]
+                rows = [
+                    dict(Titel=r[0], Ausleihdatum=format_date(r[1])) for r in result
+                ]
             return render_template(
                 "lending.html", a_v=ausleiher.Vorname, a_n=ausleiher.Nachname, rows=rows
             )
@@ -519,14 +824,20 @@ def lending():
                 if len(book_ISBN) == 10:
                     book_ISBN = to_isbn13(book_ISBN)
             searched_book = db.session.query(Buecher).filter_by(ISBN=book_ISBN).first()
-            sql_query = "SELECT buecher.Titel from buecher INNER JOIN ausleihen ON buecher.BuchID = ausleihen.BuchID INNER JOIN benutzer ON ausleihen.BenutzerID = benutzer.BenutzerID WHERE ausleihen.Rueckgabedatum IS NULL AND benutzer.BenutzerID = :ID"
+            sql_query = "SELECT buecher.Titel, ausleihen.Ausleihdatum from buecher INNER JOIN ausleihen ON buecher.BuchID = ausleihen.BuchID INNER JOIN benutzer ON ausleihen.BenutzerID = benutzer.BenutzerID WHERE ausleihen.Rueckgabedatum IS NULL AND benutzer.BenutzerID = :ID"
             result = db.session.execute(text(sql_query), {"ID": a_ID})
             rows = []
             if result:
-                rows = [dict(Titel=r[0]) for r in result]
+                rows = [
+                    dict(Titel=r[0], Ausleihdatum=format_date(r[1])) for r in result
+                ]
 
             return render_template(
-                "lending.html", a_v=a_v, a_n=a_n, rows=rows, searched_book=searched_book
+                "lending.html",
+                a_v=a_v,
+                a_n=a_n,
+                rows=rows,
+                searched_book=searched_book,
             )
 
         elif "title_search" in request.form:
@@ -543,11 +854,13 @@ def lending():
             #     if len(book_ISBN) == 10:
             #         book_ISBN = to_isbn13(book_ISBN)
             # searched_book = db.session.query(Buecher).filter_by(ISBN=book_ISBN).first()
-            sql_query = "SELECT buecher.Titel from buecher INNER JOIN ausleihen ON buecher.BuchID = ausleihen.BuchID INNER JOIN benutzer ON ausleihen.BenutzerID = benutzer.BenutzerID WHERE ausleihen.Rueckgabedatum IS NULL AND benutzer.BenutzerID = :ID"
+            sql_query = "SELECT buecher.Titel, ausleihen.Ausleihdatum from buecher INNER JOIN ausleihen ON buecher.BuchID = ausleihen.BuchID INNER JOIN benutzer ON ausleihen.BenutzerID = benutzer.BenutzerID WHERE ausleihen.Rueckgabedatum IS NULL AND benutzer.BenutzerID = :ID"
             result = db.session.execute(text(sql_query), {"ID": a_ID})
             rows = []
             if result:
-                rows = [dict(Titel=r[0]) for r in result]
+                rows = [
+                    dict(Titel=r[0], Ausleihdatum=format_date(r[1])) for r in result
+                ]
 
             return render_template(
                 "lending.html",
@@ -573,15 +886,22 @@ def lending():
             lend_book.Momentan_vorhanden -= 1
             db.session.commit()
 
-            sql_query = "SELECT buecher.Titel from buecher INNER JOIN ausleihen ON buecher.BuchID = ausleihen.BuchID INNER JOIN benutzer ON ausleihen.BenutzerID = benutzer.BenutzerID WHERE ausleihen.Rueckgabedatum IS NULL AND benutzer.BenutzerID = :ID"
+            sql_query = "SELECT buecher.Titel, ausleihen.Ausleihdatum from buecher INNER JOIN ausleihen ON buecher.BuchID = ausleihen.BuchID INNER JOIN benutzer ON ausleihen.BenutzerID = benutzer.BenutzerID WHERE ausleihen.Rueckgabedatum IS NULL AND benutzer.BenutzerID = :ID"
             result = db.session.execute(text(sql_query), {"ID": a_ID})
             rows = []
             if result:
-                rows = [dict(Titel=r[0]) for r in result]
+                rows = [
+                    dict(Titel=r[0], Ausleihdatum=format_date(r[1])) for r in result
+                ]
 
             return render_template("lending.html", a_v=a_v, a_n=a_n, rows=rows)
 
     return render_template("lending.html")
+
+
+# =============================================================================
+# USER MANAGEMENT
+# =============================================================================
 
 
 @app.route("/user_management.html", methods=["GET", "POST"])
@@ -668,15 +988,37 @@ def user_management():
     return render_template("user_management.html", heute=heute)
 
 
-@app.route("/report.html")
+# =============================================================================
+# REPORT
+# =============================================================================
+
+
+@app.route("/report.html", methods=["GET", "POST"])
 def report():
-    """Funktion der Seite"""
-    ergebnis1 = (
-        db.session.query(Buecher.Medium, db.func.count(Buecher.BuchID))
-        .group_by(Buecher.Medium)
-        .all()
-    )
-    return render_template("report.html", ergebnis1=ergebnis1)
+    if request.method == "POST":
+        if "btn_year_search" in request.form:
+            stat_year = request.form["search_year"]  # Das gewünschte Jahr
+
+            sql_query = """
+                SELECT
+                    b.Medium,
+                    COUNT(*) AS Anzahl_Buecher,
+                    COUNT(CASE WHEN strftime('%Y', a.Ausleihdatum) = :year THEN 1 END) AS Anzahl_Ausleihen
+                FROM
+                    Buecher b
+                LEFT JOIN
+                    Ausleihen a ON b.BuchID = a.BuchID
+                GROUP BY
+                    b.Medium
+                """
+
+            result = db.session.execute(text(sql_query), {"year": stat_year})
+
+            rows = [dict(row) for row in result]
+            print(type(stat_year))
+            return render_template("report.html", rows=rows, stat_year=stat_year)
+        return render_template("report.html")
+    return render_template("report.html")
 
 
 if __name__ == "__main__":

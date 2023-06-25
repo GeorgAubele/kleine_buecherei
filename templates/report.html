@@ -55,26 +55,39 @@
 <!-- Statistik -->
     <div class="container">
       <h1 class="mt-3">Statistik</h1>
+          <form action="" method="POST">
+            <h4> Für welches Jahr soll die Statistik erstellt werden?</h4>
+            <h4>Geben Sie das Jahr bitte vierstellig (z.B. 2023) ein.</h4>
+            <div class="col-sm-3">
+            <div class="input-group my-5 mr-3">
+              <span class="input-group-text" id="search-first-name">Jahr: </span>
+              <input type="text" class="form-control" name="search_year" />
+              <button type="submit" class="btn btn-primary" name="btn_year_search">Statistik</button>
+            </div>
+          </div>
+          </form>
 
 <!-- Bestand -->
-      <h2 class="my-3">Bestand</h2>
-      <table style="width: auto;" class="table table-bordered">
-        <thead>
-          <tr>
-            <th scope="col">Medium</th>
-            <th scope="col">Anzahl</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for kategorie, anzahl in ergebnis1 %}
-          <tr>
-            <th scope="row">{{ kategorie.value }}</th>
-            <td class="text-center"> {{ anzahl }}</td>
-          </tr>
-      {% endfor %}
-
-
-
+        {%if stat_year %}
+        <h2 class="my-3">Bestand und Ausleihen im Jahr {{stat_year}}</h2>
+        <table style="width: auto;" class="table table-bordered">
+          <thead>
+            <tr>
+              <th scope="col">Medium</th>
+              <th scope="col">Bestand</th>
+              <th scope="col">Ausleihen {{stat_year}}</th>
+            </tr>
+          </thead>
+          <div>
+          {% for row in rows %}
+            <tr>
+              <th scope="row">{{ row["Medium"]}}</th>
+              <td class="text-center"> {{ row["Anzahl_Buecher"] }}</td>
+              <td class="text-center"> {{ row["Anzahl_Ausleihen"] }}</td>
+            </tr>
+          {% endfor %}
+        {% endif %}
+          </div>
     </div>
   </body>
 </html>

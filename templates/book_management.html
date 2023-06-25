@@ -119,6 +119,14 @@
               <input type="text" class="form-control" name="last_name" readonly value="{{book.Medium.value}}" />
             </div>
             <div class="input-group">
+              <span class="input-group-text my_searchlabel">Kommentar:</span>
+              <input type="text" class="form-control" name="last_name" readonly value="{{book.Kommentar}}" />
+            </div>
+            <div class="input-group">
+              <span class="input-group-text my_searchlabel">Standort:</span>
+              <input type="text" class="form-control" name="last_name" readonly value="{{book.Standort}}" />
+            </div>
+            <div class="input-group">
               <span class="input-group-text my_searchlabel">ISBN:</span>
               <input type="text" class="form-control" name="last_name" readonly value="{{book.ISBN}}" />
               <button type="submit" class="btn btn-primary" name="btn_book_picked" value={{book.BuchID}}>-></button>
@@ -180,6 +188,18 @@
                 <option value="Anderes_Nichtbuchmedium">Anderes_Nichtbuchmedium</option>
                 <option value="Virtuelles_Medium">Virtuelles_Medium</option>
               </select>
+            </div>
+            <div class="input-group mb-3">
+              <span class="input-group-text my_searchlabel"
+                >Kommentar:</span
+              >
+              <input type="text" class="form-control" name="comment" value="{{picked_book.Kommentar}}"/>
+            </div>
+            <div class="input-group mb-3">
+              <span class="input-group-text my_searchlabel"
+                >Standort:</span
+              >
+              <input type="text" class="form-control" name="location" value="{{picked_book.Standort}}"/>
             </div>
             <div class="input-group mb-3">
               <span class="input-group-text my_searchlabel"
@@ -263,6 +283,18 @@
               <option value="Anderes_Nichtbuchmedium">Anderes_Nichtbuchmedium</option>
               <option value="Virtuelles_Medium">Virtuelles_Medium</option>
             </select>
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text my_searchlabel" id="basic-addon1"
+              >Kommentar:</span
+            >
+            <input type="text" class="form-control" name="comment" />
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text my_searchlabel" id="basic-addon1"
+              >Standort:</span
+            >
+            <input type="text" class="form-control" name="location" />
           </div>
           <div class="input-group mb-3">
             <span class="input-group-text my_searchlabel" id="basic-addon1"

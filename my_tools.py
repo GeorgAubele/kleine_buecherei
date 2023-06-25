@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime, date
 
 # from isbntools.app import *
 from isbnlib import *
@@ -25,14 +25,19 @@ def date_to_str(datum) -> str:
         return wanted_str
 
 
+def format_date(date_str):
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f")
+    return date_obj.strftime("%d.%m.%Y")
+
+
 def liststring_to_list(string: str) -> list:
     """Wandelt eine Liste von Wörtern, mit Komma getrennt, in eine Liste um"""
     liste = string.split(", ")
     return liste
 
 
-def list_to_liststring(list: list) -> str:
-    answer = "" + ", ".join(list)
+def list_to_liststring(liste: list) -> str:
+    answer = "" + ", ".join(liste)
     return answer
 
 
