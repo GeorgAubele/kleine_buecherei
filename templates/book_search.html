@@ -70,13 +70,35 @@
         Beispiel:
         Die Eingabe von "Mauer" gibt als Suchergebnisse "Mauer" aus, aber auch "Mauermann"
         oder "Almauerich".
+
+        <h4>Ausgeliehene Bücher</h4>
         <form method="post">
           <div class="input-group my-3 mr-3">
             <span class="input-group-text" id="search-first-name">Titel: </span>
             <input type="text" class="form-control" name="search_title" />
-            <button type="submit" class="btn btn-primary" name="btn_book_search">Suche</button>
+            <button type="submit" class="btn btn-primary" name="btn_book_away_search">Suche</button>
           </div>
         </form>
+
+        <h4>Nicht ausgeliehene Bücher</h4>
+        <form method="post">
+          <div class="input-group my-3 mr-3">
+            <span class="input-group-text" id="search-first-name">Titel: </span>
+            <input type="text" class="form-control" name="search_title" />
+            <button type="submit" class="btn btn-primary" name="btn_book_here_search">Suche</button>
+          </div>
+        </form>
+
+        <h2>Autor eingeben</h2>
+        Es gilt das gleiche wie für die Titelsuche.
+        <form method="post">
+          <div class="input-group my-3 mr-3">
+            <span class="input-group-text" id="search-first-name">Autor: </span>
+            <input type="text" class="form-control" name="search_author" />
+            <button type="submit" class="btn btn-primary" name="btn_author_search">Suche</button>
+          </div>
+        </form>
+
         <h2>Schlagworte eingeben</h2>
         Bitte durch Komma getrennt eingeben.<br>
         Beispiel:
@@ -88,7 +110,38 @@
             <button type="submit" class="btn btn-primary" name="btn_tags_search">Suche</button>
           </div>
         </form>
+
+        <h2>Lange ausgeliehene Bücher suchen</h2>
+        
+        <form method="post">
+          <div class="input-group my-3 mr-3">
+            <span class="input-group-text" id="search-first-name">Länger als 4 Wochen </span>
+            <!--input type="text" class="form-control" name="" /-->
+            <button type="submit" class="btn btn-primary" name="btn_4W_search">Suche</button>
+          </div>
+        </form>
+
+        <form method="post">
+          <div class="input-group my-3 mr-3">
+            <span class="input-group-text" id="search-first-name">Länger als 8 Wochen </span>
+            <!--input type="text" class="form-control" name="" /-->
+            <button type="submit" class="btn btn-primary" name="btn_8W_search">Suche</button>
+          </div>
+        </form>
+
+        <form method="post">
+          <div class="input-group my-3 mr-3">
+            <span class="input-group-text" id="search-first-name">Länger als 12 Wochen </span>
+            <!--input type="text" class="form-control" name="" /-->
+            <button type="submit" class="btn btn-primary" name="btn_12W_search">Suche</button>
+          </div>
+        </form>
+
       </div>
+
+
+
+
 
       <!-- Suchergebnisse -->
 
@@ -110,12 +163,28 @@
               <input type="text" class="form-control" name="last_name" readonly value="{{book.Schlagworte}}" />
             </div>
             <div class="input-group">
+              <span class="input-group-text my_searchlabel" >Kommentar:</span>
+              <input type="text" class="form-control" name="last_name" readonly value="{{book.Kommentar}}" />
+            </div>
+            <div class="input-group">
+              <span class="input-group-text my_searchlabel" >Standort:</span>
+              <input type="text" class="form-control" name="last_name" readonly value="{{book.Standort}}" />
+            </div>
+            <div class="input-group">
               <span class="input-group-text my_searchlabel" >Medium:</span>
               <input type="text" class="form-control" name="last_name" readonly value="{{book.Medium.value}}" />
             </div>
             <div class="input-group">
               <span class="input-group-text my_searchlabel" >ISBN:</span>
               <input type="text" class="form-control" name="last_name" readonly value="{{book.ISBN}}" />
+            </div>
+            <div class="input-group">
+              <span class="input-group-text my_searchlabel" >Ausleihdatum:</span>
+              <input type="text" class="form-control" name="last_name" readonly value="{{book.Ausleihdatum}}" />
+            </div>
+            <div class="input-group">
+              <span class="input-group-text my_searchlabel" >Von:</span>
+              <input type="text" class="form-control" name="last_name" readonly value="{{book.Vorname}} {{book.Nachname}}" />
             </div>
             <div class="input-group">
               <span class="input-group-text my_searchlabel" >Vorhanden:</span>

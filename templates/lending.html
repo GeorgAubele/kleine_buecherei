@@ -157,7 +157,7 @@
         
       </div>
     </div>
-
+<hr>
 <!-- Ausleiher gefunden -->
     <div class="text-center">
       <div>
@@ -187,7 +187,7 @@
           <button type="submit" class="btn btn-primary" name="title_search">Suchen</button>
         </form>
 
-    <!-- Suchergebniss -->
+    <!-- Suchergebnisse -->
 
         <h2>Suchergebnis</h2>
         {% if searched_book %}
@@ -205,11 +205,17 @@
             >
             <input type="text" class="form-control" name="author" value="{{searched_book.Autor}}" readonly />
           </div>
-          <div class="input-group mb-3">
+          <div class="input-group">
             <span class="input-group-text my_searchlabel2"
               >Titel:</span
             >
             <input type="text" class="form-control" name="title" value="{{searched_book.Titel}}" readonly />
+          </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text my_searchlabel"
+              >Kommentar:</span
+            >
+            <input type="text" class="form-control" name="title" value="{{searched_book.Kommentar}}" readonly />
           </div>
         </form>
         {% endif %}
@@ -228,20 +234,34 @@
             >
             <input type="text" class="form-control" name="author" value="{{searched_book.Autor}}" readonly />
           </div>
-          <div class="input-group mb-3">
+          <div class="input-group">
             <span class="input-group-text my_searchlabel2"
               >Titel:</span
             >
             <input type="text" class="form-control" name="title" value="{{searched_book.Titel}}" readonly />
           </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text my_searchlabel3"
+              >Kommentar:</span
+            >
+            <input type="text" class="form-control" name="title" value="{{searched_book.Kommentar}}" readonly />
+          </div>
         </form>
         {% endfor %}
       </div>
+
       <div class="col">
         <h2>Aktuelle Ausleihen</h2>
         <ul class="list-group">
           {% for row in rows %}
-          <li class="list-group-item">{{row["Titel"]}}</li>
+          <div class="input-group mb-3">
+            <span class="input-group-text my_searchlabel2"
+              >Titel:</span
+            >
+            <input type="text" class="form-control" name="title" value="{{row.Titel}}" readonly />
+          <!--li class="list-group-item">{{row.Titel}}</li-->
+          <li class="list-group-item">{{row.Ausleihdatum}}</li>
+          <!-- li class="list-group-item">{{row.Ausleihdatum}}</li-->
           {% endfor %}
         </ul>
       </div>

@@ -62,6 +62,7 @@
     </div>
     {% endfor %}
     {% endif %} {% endwith %}
+
     <div class="justify-start mt-3 ms-5 me-5 row">
       <div class="col">
 
@@ -72,11 +73,13 @@
         <form action="" method="POST">
           <div class="input-group my-3">
             <span class="input-group-text">ISBN-Nummern:</span>
-            <textarea class="form-control" style="height: 400px" name="ISBNs">{{ISBNs}}</textarea>
+            <textarea class="form-control" style="height: 300px" name="ISBNs">{{ISBNs}}</textarea>
           </div>
-          <button type="submit" class="btn btn-primary mt-3" name="btn_search_goob">Suchen bei Google</button> <br>
-          <button type="submit" class="btn btn-primary mt-3" name="btn_search_wiki">Suchen bei Wikipedia</button> <br>
-          <button type="submit" class="btn btn-primary mt-3" name="btn_search_openl">Suchen bei OpenLibrary</button>
+          Suche bei &nbsp &nbsp &nbsp
+          <button type="submit" class="btn btn-primary mt-3" name="btn_search_goob">Google Books</button> 
+          <button type="submit" class="btn btn-primary mt-3 mx-2" name="btn_search_wiki">Wikipedia</button> 
+          <button type="submit" class="btn btn-primary mt-3" name="btn_search_openl">OpenLibrary</button> <br><br>
+          <button type="submit" class="btn btn-warning" name="btn_delete_list">Liste löschen</button>
         </form>
       </div>
 
@@ -88,16 +91,112 @@
         <form action="" method="POST">
           <div class="input-group my-3">
             <span class="input-group-text">Bücher:</span>
-            <textarea class="form-control" style="height: 400px" readonly>{{result_txt}}</textarea>
+            <textarea class="form-control" style="height: 300px" readonly>{{result_txt}}</textarea>
           </div>
           <p> Sollte etwas nicht passen, bitte links die entsprechende ISBN herauslöschen und erneut versuchen. <br> 
           Wenn man zufrieden mit der Liste ist, auf "Importieren" klicken. </p>
-          <button type="submit" class="btn btn-primary" name="btn_import_books">Importieren</button>
+          <button type="submit" class="btn btn-primary" name="btn_import_books">Importieren und unten weiter bearbeiten</button>
         </form>
       </div>
 
       </div>
+
+
+<div class="justify-start mt-5 ms-5 me-5 row">
+  <div class="col-7">
+    <h2>Buch Angaben</h2>
+    {% for picked_book in books %}
+    <p>Die Schlagworte bitte mit Kommas trennen. Beispiel: Mädchen, Pony, Pferd, Weihachten</p>
+    <form action="" method="POST">
+      <div class="input-group mt-3">
+        <span class="input-group-text my_searchlabel"
+          >ISBN:</span
+        >
+        <input type="text" class="form-control" name="ISBN" value="{{picked_book.ISBN}}" />
+      </div>
+      <div class="input-group">
+        <span class="input-group-text my_searchlabel"
+          >Titel:</span
+        >
+        <input type="text" class="form-control" name="title" value="{{picked_book.Titel}}"/>
+      </div>
+      <div class="input-group">
+        <span class="input-group-text my_searchlabel"
+          >Autor:</span
+        >
+        <input type="text" class="form-control" name="author" value="{{picked_book.Autor}}"/>
+      </div>
+      <div class="input-group">
+        <span class="input-group-text my_searchlabel"
+          >Schlagworte:</span
+        >
+        <input type="text" class="form-control" name="tags" value="{{picked_book.Schlagworte}}"/>
+      </div>
+      <div class="input-group">
+        <div class="input-group-prepend">
+          <label class="input-group-text my_searchlabel" for="inputGroupSelect01">Medium</label>
+        </div>
+        <select class="custom-select form-control" id="inputGroupSelect01" name="medium">
+          <option selected value="{{picked_book.Medium.value}}">{{picked_book.Medium.value}}</b></option>
+          <option value="Sachbuch">Sachbuch</option>
+          <option value="Roman_Jugendbuch">Roman_Jugendbuch</option>
+          <option value="Kinderbuch">Kinderbuch</option>
+          <option value="Zeitung_Zeitschrift">Zeitung_Zeitschrift</option>
+          <option value="Tonträger">Tonträger</option>
+          <option value="Film">Film</option>
+          <option value="Analoges_Spiel">Analoges_Spiel</option>
+          <option value="Digitales_Medium">Digitales_Medium</option>
+          <option value="Anderes_Nichtbuchmedium">Anderes_Nichtbuchmedium</option>
+          <option value="Virtuelles_Medium">Virtuelles_Medium</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <span class="input-group-text my_searchlabel"
+          >Kommentar:</span
+        >
+        <input type="text" class="form-control" name="comment" value="{{picked_book.Kommentar}}"/>
+      </div>
+      <div class="input-group">
+        <span class="input-group-text my_searchlabel"
+          >Standort:</span
+        >
+        <input type="text" class="form-control" name="location" value="{{picked_book.Standort}}"/>
+      </div>
+      <div class="input-group">
+        <span class="input-group-text my_searchlabel"
+          >Verlag:</span
+        >
+        <input type="text" class="form-control" name="publisher" value="{{picked_book.Verlag}}"/>
+      </div>
+      <div class="input-group">
+        <span class="input-group-text my_searchlabel"
+          >Jahr:</span
+        >
+        <input type="text" class="form-control" name="year" value="{{picked_book.Jahr}}"/>
+      </div>
+      <div class="input-group">
+        <span class="input-group-text my_searchlabel"
+          >Anzahl:</span
+        >
+        <input type="text" class="form-control" name="number" value="{{picked_book.Anzahl}}"/>
+      </div>
+      <div class="input-group mb-5">
+        <span class="input-group-text my_searchlabel"
+          >Vorhanden:</span
+        >
+        <input type="text" class="form-control" name="available" value="{{picked_book.Momentan_vorhanden}}"/>
+      
+      <button type="submit" class="btn btn-primary" name="btn_book_change" value="{{picked_book.BuchID}}">
+        Buch speichern
+      </button>
     </div>
+    </form>
+    {% endfor %}
+  </div>
+</div>
+
+
+
 <hr>
     <!-- footer -->
 

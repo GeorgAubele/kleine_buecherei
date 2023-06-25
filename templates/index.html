@@ -160,7 +160,7 @@
     </div>
 
     <!-- Ausleihen -->
-
+    <hr>
     <div class="text-center">
       <div>
         {% if a_v %}
@@ -178,12 +178,32 @@
         <h2>Ausgeliehene Bücher</h2>
         {% for row in rows %}
         <form action="" method="POST">
-          <div class="input-group mt-3">
-            <span class="input-group-text my_searchlabel2"
-              >Titel:</span
-            >
-            <input type="text" class="form-control" name="title" value="{{row['Titel']}}" readonly />
-            <button type="submit" class="btn btn-primary" name="btn_back_ID", value="{{row['BuchID']}}">Zurückgeben</button>
+          <div class="input-group my-5">
+            <div class="input-group">
+              <span class="input-group-text my_searchlabel2"
+                >Titel:</span
+              >
+              <input type="text" class="form-control" name="title" value="{{row['Titel']}}" readonly />
+            </div>
+            <div class="input-group">
+              <span class="input-group-text my_searchlabel"
+                >Ausleihedatum:</span
+              >
+              <input type="text" class="form-control" name="comment" value="{{row['Ausleihdatum']}}" readonly />
+            </div>
+            <div class="input-group">
+              <span class="input-group-text my_searchlabel"
+                >Kommentar:</span
+              >
+              <input type="text" class="form-control" name="comment" value="{{row['Kommentar']}}" readonly />
+            </div>
+            <div class="input-group">
+              <span class="input-group-text my_searchlabel"
+                >ISBN:</span
+              >
+              <input type="text" class="form-control" name="ISBN" value="{{row['ISBN']}}" readonly />
+              <button type="submit" class="btn btn-primary" name="btn_back_ID", value="{{row['BuchID']}}">Zurückgeben</button>
+            </div>
           </div>
         </form>
         {% endfor %}
